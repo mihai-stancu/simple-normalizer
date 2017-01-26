@@ -1,0 +1,18 @@
+{
+    "name": "mihai-stancu/simple-normalizer",
+    "description": "A very simple object normalizer.",
+
+    "type": "library",
+    "license": "MIT",
+
+    "authors": [
+        {
+            "name": "Mihai Stancu",
+            "email": "stancu.t.mihai@gmail.com"
+        }
+    ],
+
+    "autoload": {
+        "psr-4": {"": "src"}
+    }
+}
