@@ -84,14 +84,15 @@ trait Normalizable
     }
 
     /**
-     * @param array           $array
+     * @param array|object    $array
      * @param EntityInterface $object
      * @param array           $context
      *
      * @return self
      */
-    public static function denormalize(array $array, EntityInterface $object = null, array $context = [])
+    public static function denormalize($array, EntityInterface $object = null, array $context = [])
     {
+        $array = (array) $array;
         $object = $object ?: new static();
 
         if (empty($array)) {
@@ -104,7 +105,7 @@ trait Normalizable
     }
 
     /**
-     * @param array           $array
+     * @param array|object    $array
      * @param EntityInterface $object
      * @param array           $context
      *
@@ -150,6 +151,7 @@ trait Normalizable
         /** @var EntityInterface $class */
         $class = static::TYPE;
         foreach ($array as $key => $value) {
+            $value = $value instanceof \stdClass ? (array) $value : $value;
             $value = is_array($value) ? $class::denormalize($value, $collection[$key] ?? null, $context) : $value;
 
             $collection[$key] = $value;
