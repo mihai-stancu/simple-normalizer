@@ -12,7 +12,11 @@
         }
     ],
 
+    "require": {
+        "mihai-stancu/data-type": "^0.1.0"
+    },
+
     "autoload": {
-        "psr-4": {"": "src"}
+        "psr-4": {"MS\\Normalizer\\": "src"}
     }
 }

@@ -8,8 +8,8 @@
 
 namespace MS\Normalizer;
 
-use MS\DataType\CollectionInterface;
-use MS\DataType\EntityInterface;
+use MS\DataType\Interfaces\CollectionInterface;
+use MS\DataType\Interfaces\EntityInterface;
 
 trait Normalizable
 {
