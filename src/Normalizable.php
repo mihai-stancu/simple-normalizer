@@ -130,7 +130,7 @@ trait Normalizable
      */
     protected static function denormalizeProperty($value, EntityInterface $object, $property, array $context = [])
     {
-        if ($object->$property instanceof EntityInterface) {
+        if (property_exists($object, $property) and $object->$property instanceof EntityInterface) {
             /** @var EntityInterface $item */
             $item = $object->$property;
             $value = $item::denormalize($value, $item, $context);
