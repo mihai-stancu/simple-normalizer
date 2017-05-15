@@ -13,7 +13,7 @@
     ],
 
     "require": {
-        "mihai-stancu/data-type": "^0.1.0"
+        "mihai-stancu/container-type": "^0.1.0"
     },
 
     "autoload": {

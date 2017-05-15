@@ -8,8 +8,8 @@
 
 namespace MS\Normalizer;
 
-use MS\DataType\Interfaces\CollectionInterface;
-use MS\DataType\Interfaces\EntityInterface;
+use MS\ContainerType\Interfaces\Collection;
+use MS\ContainerType\Interfaces\Entity;
 
 trait Normalizable
 {
@@ -22,12 +22,12 @@ trait Normalizable
     }
 
     /**
-     * @param EntityInterface $object
-     * @param array           $context
+     * @param Entity $object
+     * @param array  $context
      *
      * @return array
      */
-    public static function normalize(EntityInterface $object, array $context = [])
+    public static function normalize(Entity $object, array $context = [])
     {
         $method = !($object instanceof \ArrayAccess) ? 'normalizeObject' : 'normalizeCollection';
 
@@ -35,12 +35,12 @@ trait Normalizable
     }
 
     /**
-     * @param EntityInterface $object
-     * @param array           $context
+     * @param Entity $object
+     * @param array  $context
      *
      * @return array
      */
-    protected static function normalizeObject(EntityInterface $object, array $context = [])
+    protected static function normalizeObject(Entity $object, array $context = [])
     {
         $array = [];
         foreach ($object as $key => $value) {
@@ -51,16 +51,16 @@ trait Normalizable
     }
 
     /**
-     * @param mixed           $value
-     * @param EntityInterface $object
-     * @param string          $property
-     * @param array           $context
+     * @param mixed  $value
+     * @param Entity $object
+     * @param string $property
+     * @param array  $context
      *
      * @return mixed
      */
-    protected static function normalizeProperty($value, EntityInterface $object, $property, array $context = [])
+    protected static function normalizeProperty($value, Entity $object, $property, array $context = [])
     {
-        if ($value instanceof EntityInterface) {
+        if ($value instanceof Entity) {
             $value = $value::normalize($value, $context);
         }
 
@@ -68,12 +68,12 @@ trait Normalizable
     }
 
     /**
-     * @param CollectionInterface|EntityInterface[] $collection
-     * @param array                                 $context
+     * @param Collection|Entity[] $collection
+     * @param array               $context
      *
      * @return array
      */
-    protected static function normalizeCollection(CollectionInterface $collection, array $context = [])
+    protected static function normalizeCollection(Collection $collection, array $context = [])
     {
         $array = [];
         foreach ($collection as $key => $value) {
@@ -84,13 +84,13 @@ trait Normalizable
     }
 
     /**
-     * @param array|object    $array
-     * @param EntityInterface $object
-     * @param array           $context
+     * @param array|object $array
+     * @param Entity       $object
+     * @param array        $context
      *
      * @return self
      */
-    public static function denormalize($array, EntityInterface $object = null, array $context = [])
+    public static function denormalize($array, Entity $object = null, array $context = [])
     {
         $array = (array) $array;
         $object = $object ?: new static();
@@ -105,13 +105,13 @@ trait Normalizable
     }
 
     /**
-     * @param array|object    $array
-     * @param EntityInterface $object
-     * @param array           $context
+     * @param array|object $array
+     * @param Entity       $object
+     * @param array        $context
      *
      * @return object
      */
-    protected static function denormalizeObject($array, EntityInterface $object, array $context = [])
+    protected static function denormalizeObject($array, Entity $object, array $context = [])
     {
         foreach ($array as $property => $value) {
             $object->$property = static::denormalizeProperty($value, $object, $property, $context);
@@ -121,17 +121,17 @@ trait Normalizable
     }
 
     /**
-     * @param mixed           $value
-     * @param EntityInterface $object
-     * @param string          $property
-     * @param array           $context
+     * @param mixed  $value
+     * @param Entity $object
+     * @param string $property
+     * @param array  $context
      *
-     * @return EntityInterface|\ArrayAccess|mixed
+     * @return Entity|\ArrayAccess|mixed
      */
-    protected static function denormalizeProperty($value, EntityInterface $object, $property, array $context = [])
+    protected static function denormalizeProperty($value, Entity $object, $property, array $context = [])
     {
-        if (property_exists($object, $property) and $object->$property instanceof EntityInterface) {
-            /** @var EntityInterface $item */
+        if (property_exists($object, $property) and $object->$property instanceof Entity) {
+            /** @var Entity $item */
             $item = $object->$property;
             $value = $item::denormalize($value, $item, $context);
         }
@@ -140,15 +140,15 @@ trait Normalizable
     }
 
     /**
-     * @param array               $array
-     * @param CollectionInterface $collection
-     * @param array               $context
+     * @param array      $array
+     * @param Collection $collection
+     * @param array      $context
      *
-     * @return CollectionInterface
+     * @return Collection
      */
-    protected static function denormalizeCollection($array, CollectionInterface $collection, array $context = [])
+    protected static function denormalizeCollection($array, Collection $collection, array $context = [])
     {
-        /** @var EntityInterface $class */
+        /** @var Entity $class */
         $class = static::TYPE;
         foreach ($array as $key => $value) {
             $value = $value instanceof \stdClass ? (array) $value : $value;
@@ -165,7 +165,7 @@ trait Normalizable
      */
     public function jsonSerialize()
     {
-        /* @var EntityInterface $this */
+        /* @var Entity $this */
         return static::normalize($this, ['format' => 'json']);
     }
 
@@ -174,7 +174,7 @@ trait Normalizable
      */
     public function serialize()
     {
-        /* @var EntityInterface|\ArrayAccess $this */
+        /* @var Entity|\ArrayAccess $this */
         return serialize(static::normalize($this, ['format' => 'serialize']));
     }
 
