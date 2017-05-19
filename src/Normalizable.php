@@ -22,62 +22,66 @@ trait Normalizable
     }
 
     /**
-     * @param Entity $object
-     * @param array  $context
+     * @param array $context
      *
      * @return array
      */
-    public static function normalize(Entity $object, array $context = [])
+    public function normalize(array $context = [])
     {
-        $method = !($object instanceof \ArrayAccess) ? 'normalizeObject' : 'normalizeCollection';
+        if ($this instanceof Collection) {
+            return $this->normalizeCollection($context);
+        }
 
-        return $object::$method($object, $context);
+        return $this->normalizeObject($context);
     }
 
     /**
-     * @param Entity $object
-     * @param array  $context
+     * @param array $context
      *
      * @return array
      */
-    protected static function normalizeObject(Entity $object, array $context = [])
+    protected function normalizeObject(array $context = [])
     {
         $array = [];
-        foreach ($object as $key => $value) {
-            $array[$key] = static::normalizeProperty($value, $object, $key, $context);
+        foreach ($this as $property => $value) {
+            $context['property'] = $property;
+            $array[$property] = $this->normalizeProperty($value, $context);
         }
 
         return array_filter($array);
     }
 
     /**
-     * @param mixed  $value
-     * @param Entity $object
-     * @param string $property
-     * @param array  $context
+     * @param mixed $value
+     * @param array $context
      *
      * @return mixed
      */
-    protected static function normalizeProperty($value, Entity $object, $property, array $context = [])
+    protected function normalizeProperty($value, array $context = [])
     {
         if ($value instanceof Entity) {
-            $value = $value::normalize($value, $context);
+            $value = $value->normalize($context);
         }
 
-        return is_object($value) ? (array) $value : $value;
+        if (is_object($value)) {
+            return (array) $value;
+        }
+
+        return  $value;
     }
 
     /**
-     * @param Collection|Entity[] $collection
-     * @param array               $context
+     * @param array $context
      *
      * @return array
      */
-    protected static function normalizeCollection(Collection $collection, array $context = [])
+    protected function normalizeCollection(array $context = [])
     {
         $array = [];
-        foreach ($collection as $key => $value) {
-            $array[$key] = $value::normalize($value, $context);
+        /** @var Entity|Collection|static $this */
+        foreach ($this as $key => $value) {
+            $context['key'] = $key;
+            $array[$key] = $value->normalize($context);
         }
 
         return $array;
@@ -85,79 +89,98 @@ trait Normalizable
 
     /**
      * @param array|object $array
-     * @param Entity       $object
      * @param array        $context
      *
-     * @return self
+     * @return Entity|Collection|static
      */
-    public static function denormalize($array, Entity $object = null, array $context = [])
+    public function denormalize($array, array $context = [])
     {
         $array = (array) $array;
-        $object = $object ?: new static();
-
         if (empty($array)) {
-            return $object;
+            return $this;
         }
 
-        $method = !($object instanceof \ArrayAccess) ? 'denormalizeObject' : 'denormalizeCollection';
+        if ($this instanceof Collection) {
+            return $this->denormalizeCollection($array, $context);
+        }
 
-        return static::$method($array, $object, $context);
+        return $this->denormalizeObject($array, $context);
     }
 
     /**
      * @param array|object $array
-     * @param Entity       $object
      * @param array        $context
      *
-     * @return object
+     * @return Entity|static
      */
-    protected static function denormalizeObject($array, Entity $object, array $context = [])
+    protected function denormalizeObject($array, array $context = [])
     {
-        foreach ($array as $property => $value) {
-            $object->$property = static::denormalizeProperty($value, $object, $property, $context);
+        foreach ($array as $property => $data) {
+            $context['property'] = $property;
+            $this->$property = $this->denormalizeProperty($data, $context);
         }
 
-        return $object;
+        return $this;
     }
 
     /**
-     * @param mixed  $value
-     * @param Entity $object
-     * @param string $property
-     * @param array  $context
+     * @param mixed $data
+     * @param array $context
      *
-     * @return Entity|\ArrayAccess|mixed
+     * @return Entity|Collection|mixed
      */
-    protected static function denormalizeProperty($value, Entity $object, $property, array $context = [])
+    protected function denormalizeProperty($data, array $context = [])
     {
-        if (property_exists($object, $property) and $object->$property instanceof Entity) {
-            /** @var Entity $item */
-            $item = $object->$property;
-            $value = $item::denormalize($value, $item, $context);
+        $property = $context['property'];
+        $value = $this->$property;
+
+        if (!property_exists($this, $property) or !($value instanceof Entity)) {
+            return $data;
         }
 
-        return $value;
+        /** @var Entity|static $value */
+        return $value->denormalize($data, $context);
     }
 
     /**
-     * @param array      $array
-     * @param Collection $collection
-     * @param array      $context
+     * @param array $array
+     * @param array $context
      *
-     * @return Collection
+     * @return Collection|static
      */
-    protected static function denormalizeCollection($array, Collection $collection, array $context = [])
+    protected function denormalizeCollection($array, array $context = [])
     {
-        /** @var Entity $class */
-        $class = static::TYPE;
-        foreach ($array as $key => $value) {
-            $value = $value instanceof \stdClass ? (array) $value : $value;
-            $value = is_array($value) ? $class::denormalize($value, $collection[$key] ?? null, $context) : $value;
-
-            $collection[$key] = $value;
+        $context['class'] = static::TYPE;
+        foreach ($array as $key => $data) {
+            $context['key'] = $key;
+            $this[$key] = $this->denormalizeItem($data, $context);
         }
 
-        return $collection;
+        return $this;
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $context
+     *
+     * @return Entity|Collection|mixed
+     */
+    protected function denormalizeItem($data, array $context = [])
+    {
+        if ($data instanceof \stdClass) {
+            $data = (array)$data;
+        }
+
+        if (!is_array($data)) {
+            return $data;
+        }
+
+        $key = $context['key'];
+        $class = $context['class'];
+        $value = isset($value) ? $this[$key] : new $class();
+
+        /** @var Entity|static $value */
+        return $value->denormalize($data, $context);
     }
 
     /**
@@ -166,7 +189,7 @@ trait Normalizable
     public function jsonSerialize()
     {
         /* @var Entity $this */
-        return static::normalize($this, ['format' => 'json']);
+        return $this->normalize(['format' => 'json']);
     }
 
     /**
@@ -174,8 +197,7 @@ trait Normalizable
      */
     public function serialize()
     {
-        /* @var Entity|\ArrayAccess $this */
-        return serialize(static::normalize($this, ['format' => 'serialize']));
+        return serialize($this->normalize(['format' => 'serialize']));
     }
 
     /**
@@ -185,6 +207,6 @@ trait Normalizable
     {
         $data = unserialize($serialized);
 
-        static::denormalize($data, $this, ['format' => 'serialize']);
+        $this->denormalize($data, ['format' => 'serialize']);
     }
 }

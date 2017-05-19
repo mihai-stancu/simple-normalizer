@@ -14,9 +14,10 @@ trait EntityTrait
 
     /**
      * @param array $data
+     * @param array $context
      */
-    public function __construct($data = [])
+    public function __construct($data = [], array $context = [])
     {
-        static::denormalize($data, $this);
+        $this->denormalize($data, $context);
     }
 }
