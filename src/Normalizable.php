@@ -9,7 +9,7 @@
 namespace MS\Normalizer;
 
 use MS\ContainerType\Interfaces\Collection;
-use MS\ContainerType\Interfaces\Entity;
+use MS\ContainerType\Interfaces\Item;
 
 trait Normalizable
 {
@@ -59,7 +59,7 @@ trait Normalizable
      */
     protected function normalizeProperty($value, array $context = [])
     {
-        if ($value instanceof Entity) {
+        if ($value instanceof Item) {
             $value = $value->normalize($context);
         }
 
@@ -78,7 +78,7 @@ trait Normalizable
     protected function normalizeCollection(array $context = [])
     {
         $array = [];
-        /** @var Entity|Collection|static $this */
+        /** @var Item|Collection|static $this */
         foreach ($this as $key => $value) {
             $context['key'] = $key;
             $array[$key] = $value->normalize($context);
@@ -91,7 +91,7 @@ trait Normalizable
      * @param array|object $array
      * @param array        $context
      *
-     * @return Entity|Collection|static
+     * @return Item|Collection|static
      */
     public function denormalize($array, array $context = [])
     {
@@ -111,7 +111,7 @@ trait Normalizable
      * @param array|object $array
      * @param array        $context
      *
-     * @return Entity|static
+     * @return Item|static
      */
     protected function denormalizeObject($array, array $context = [])
     {
@@ -127,18 +127,18 @@ trait Normalizable
      * @param mixed $data
      * @param array $context
      *
-     * @return Entity|Collection|mixed
+     * @return Item|Collection|mixed
      */
     protected function denormalizeProperty($data, array $context = [])
     {
         $property = $context['property'];
         $value = $this->$property;
 
-        if (!property_exists($this, $property) or !($value instanceof Entity)) {
+        if (!property_exists($this, $property) or !($value instanceof Item)) {
             return $data;
         }
 
-        /** @var Entity|static $value */
+        /* @var Item|static $value */
         return $value->denormalize($data, $context);
     }
 
@@ -163,12 +163,12 @@ trait Normalizable
      * @param mixed $data
      * @param array $context
      *
-     * @return Entity|Collection|mixed
+     * @return Item|Collection|mixed
      */
     protected function denormalizeItem($data, array $context = [])
     {
         if ($data instanceof \stdClass) {
-            $data = (array)$data;
+            $data = (array) $data;
         }
 
         if (!is_array($data)) {
@@ -179,7 +179,7 @@ trait Normalizable
         $class = $context['class'];
         $value = isset($value) ? $this[$key] : new $class();
 
-        /** @var Entity|static $value */
+        /* @var Item|static $value */
         return $value->denormalize($data, $context);
     }
 
@@ -188,7 +188,7 @@ trait Normalizable
      */
     public function jsonSerialize()
     {
-        /* @var Entity $this */
+        /* @var Item $this */
         return $this->normalize(['format' => 'json']);
     }
 

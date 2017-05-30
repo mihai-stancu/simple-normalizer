@@ -8,7 +8,7 @@
 
 namespace MS\Normalizer;
 
-trait EntityTrait
+trait ItemTrait
 {
     use Normalizable;
 
