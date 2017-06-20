@@ -132,11 +132,10 @@ trait Normalizable
     protected function denormalizeProperty($data, array $context = [])
     {
         $property = $context['property'];
-        $value = $this->$property;
-
-        if (!property_exists($this, $property) or !($value instanceof Item)) {
+        if (!property_exists($this, $property) or !($this->$property instanceof Item)) {
             return $data;
         }
+        $value = $this->$property;
 
         /* @var Item|static $value */
         return $value->denormalize($data, $context);
