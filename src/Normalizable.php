@@ -190,22 +190,4 @@ trait Normalizable
         /* @var Item $this */
         return $this->normalize(['format' => 'json']);
     }
-
-    /**
-     * @return string
-     */
-    public function serialize()
-    {
-        return serialize($this->normalize(['format' => 'serialize']));
-    }
-
-    /**
-     * @param string $serialized
-     */
-    public function unserialize($serialized)
-    {
-        $data = unserialize($serialized);
-
-        $this->denormalize($data, ['format' => 'serialize']);
-    }
 }
